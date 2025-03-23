@@ -1,19 +1,31 @@
 name: Deploy to staging
+
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   redeploy_everything:
-  runs-on: ubuntu-latest
-  name: Deploying everything to the staging cluster
-  steps:
-    - run: |
-        echo {{ secrets.SSH_PRIVATE_KEY }} &> ~/ssh_key
-        ssh -i ~/ssh_key ubuntu@13.201.184.126
-        cd turbo-learn && git pull
-        pnpm install
-        pnpm run build
-        pm2 restart fe-server
-        pm2 restart http-server
-        pm2 restart ws-server
+    runs-on: ubuntu-latest
+    name: Deploying everything to the staging cluster
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/ssh_key
+          chmod 600 ~/ssh_key
+
+      - name: Deploy to staging
+        run: |
+          ssh -i ~/ssh_key -o StrictHostKeyChecking=no ubuntu@13.201.184.126 << 'EOF'
+            cd turbo-learn
+            git pull
+            pnpm install
+            pnpm run build
+            pm2 restart fe-server
+            pm2 restart http-server
+            pm2 restart ws-server
+          EOF
