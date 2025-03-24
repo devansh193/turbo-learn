@@ -1,4 +1,4 @@
-name: Deploy to staging
+name: Deploy to Staging
 
 on:
   push:
@@ -8,24 +8,24 @@ on:
 jobs:
   redeploy_everything:
     runs-on: ubuntu-latest
-    name: Deploying everything to the staging cluster
+    name: Deploying Everything to the Staging Cluster
+
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up SSH key
+      - name: Set up SSH Key
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/ssh_key
           chmod 600 ~/ssh_key
 
-      - name: Deploy to staging
+      - name: Deploy to Staging
         run: |
           ssh -i ~/ssh_key -o StrictHostKeyChecking=no ubuntu@13.201.184.126 << 'EOF'
+            source ~/.nvm/nvm.sh || export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v18.16.0/bin
             cd turbo-learn
             git pull
             pnpm install
             pnpm run build
-            pm2 restart fe-server
-            pm2 restart http-server
-            pm2 restart ws-server
+            pm2 restart fe-server http-server ws-server
           EOF
